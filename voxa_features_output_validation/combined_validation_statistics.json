@@ -1,0 +1,389 @@
+{
+  "extraction_timestamp": "2026-02-17T20:13:25.218379",
+  "voxa_version": "VOxA v1.0 (Variable Oxygen-dependent Amorphous Track Model)",
+  "dataset_type": "validation",
+  "geometry": {
+    "box_half_length_um": 9.28055,
+    "box_full_length_um": 18.5611,
+    "nucleus_radius_um": 4.65,
+    "n_energy_voxels": 60,
+    "energy_voxel_size_um": 0.30935166666666664
+  },
+  "voxa_reference": {
+    "model_version": "VOxA v1.0 (Variable Oxygen-dependent Amorphous Track Model)",
+    "model_date": "2026-02",
+    "K_fix": 0.1593,
+    "K_repair": 0.2119,
+    "OER_max_retention": 3.32,
+    "OER_max_survival": 2.93,
+    "conversion_factor": 1.2,
+    "case_fractions": {
+      "p1_low": 0.04,
+      "p2_low": 0.32,
+      "p3_low": 0.64,
+      "p1_high": 0.68
+    },
+    "f_min": 0.02,
+    "f_max": 0.68,
+    "calibration_O2": 0.21,
+    "particles": {
+      "electron": {
+        "delta_f": 0.00357,
+        "delta_f_ci_low": 0.00348,
+        "delta_f_ci_high": 0.00486,
+        "P_DSB_cv": 0.36,
+        "n_calibration": 2515,
+        "p1_base": 0.0401,
+        "p2_base": 0.3199,
+        "p3_base": 0.64,
+        "LET_nominal": 0.2
+      },
+      "proton": {
+        "delta_f": 0.02588,
+        "delta_f_ci_low": 0.02431,
+        "delta_f_ci_high": 0.02745,
+        "P_DSB_cv": 2.58,
+        "n_calibration": 2491,
+        "p1_base": 0.0953,
+        "p2_base": 0.2649,
+        "p3_base": 0.6398,
+        "LET_nominal": 4.6
+      },
+      "carbon": {
+        "delta_f": 0.08753,
+        "delta_f_ci_low": 0.08155,
+        "delta_f_ci_high": 0.09365,
+        "P_DSB_cv": 8.08,
+        "n_calibration": 2519,
+        "p1_base": 0.3879,
+        "p2_base": 0.0,
+        "p3_base": 0.6121,
+        "LET_nominal": 40.9
+      }
+    }
+  },
+  "particles": {
+    "electron": {
+      "particle": "electron",
+      "dataset_type": "validation",
+      "n_dsbs": 389,
+      "extraction_timestamp": "2026-02-17T20:13:24.767374",
+      "E_local": {
+        "mean": 0.0026885446673977384,
+        "std": 0.001392975917702523,
+        "min": 0.0008165534818544984,
+        "max": 0.01031701546162367,
+        "median": 0.002488089259713888,
+        "q25": 0.001587342121638358,
+        "q75": 0.003433150937780738,
+        "cv": 51.811522218479425,
+        "n_zero": 0,
+        "n_nonzero": 389
+      },
+      "E_total_3x3x3": {
+        "mean": 0.05229419463765712,
+        "std": 0.007035667596409196,
+        "min": 0.03531427338020876,
+        "max": 0.07740300067234784
+      },
+      "grad_mag": {
+        "mean": 0.001123239985462888,
+        "std": 0.0005974437822914992,
+        "max": 0.0037378227456589352
+      },
+      "core_frac": {
+        "mean": 0.051452852118693986,
+        "std": 0.02546071670515821
+      },
+      "n_active_3x3x3": {
+        "mean": 27.0
+      },
+      "is_local_max": {
+        "count": 42,
+        "fraction": 0.10796915167095116
+      },
+      "complexity_distribution": {
+        "DSB": 281,
+        "DSB+": 88,
+        "DSB++": 20
+      },
+      "P_DSB": {
+        "21.000": {
+          "mean": 1.0,
+          "std": 0.0,
+          "cv": 0.0,
+          "min": 1.0,
+          "max": 1.0
+        },
+        "2.100": {
+          "mean": 0.8814449744634726,
+          "std": 0.0004485442193526841,
+          "cv": 0.050887376109405906,
+          "min": 0.8808421183367815,
+          "max": 0.8839007818766572
+        },
+        "0.210": {
+          "mean": 0.5098197069661373,
+          "std": 0.0018545610857567752,
+          "cv": 0.36376802630737787,
+          "min": 0.5073271243742026,
+          "max": 0.5199735439037261
+        },
+        "0.021": {
+          "mean": 0.3275945413140573,
+          "std": 0.002543996597274952,
+          "cv": 0.7765686775702656,
+          "min": 0.3241753378804203,
+          "max": 0.34152308042603235
+        },
+        "0.001": {
+          "mean": 0.30134849651785856,
+          "std": 0.002643296577355336,
+          "cv": 0.8771560528421911,
+          "min": 0.29779583110034363,
+          "max": 0.31582070917792304
+        }
+      },
+      "energy_file_metadata": {
+        "filepath": "validation_data/electron_EnergyDeposit.csv",
+        "header_lines": [
+          "# TOPAS Version: 4.0",
+          "# Parameter File: electron.txt",
+          "# Results for scorer: EnergyDeposit",
+          "# Scored in component: ParallelWorldBox",
+          "# X in 60 bins of 3.09352e-05 cm",
+          "# Y in 60 bins of 3.09352e-05 cm",
+          "# Z in 60 bins of 3.09352e-05 cm",
+          "# EnergyDeposit ( MeV ) : Sum"
+        ],
+        "bin_size_cm": 3.09352e-05,
+        "n_bins": [
+          60,
+          60,
+          60
+        ],
+        "n_data_lines": 216000,
+        "n_nonzero_voxels": 96066,
+        "total_energy_MeV": 132.40222727981768,
+        "max_voxel_energy_MeV": 0.01192316506057978,
+        "fraction_nonzero": 0.44475,
+        "parse_errors": 0
+      }
+    },
+    "proton": {
+      "particle": "proton",
+      "dataset_type": "validation",
+      "n_dsbs": 392,
+      "extraction_timestamp": "2026-02-17T20:13:24.978765",
+      "E_local": {
+        "mean": 0.1584826308956378,
+        "std": 0.05577338851891974,
+        "min": 0.0003590663836803287,
+        "max": 0.215500220656395,
+        "median": 0.1733803600072861,
+        "q25": 0.1600455194711685,
+        "q75": 0.1908294707536697,
+        "cv": 35.1921142422522,
+        "n_zero": 0,
+        "n_nonzero": 392
+      },
+      "E_total_3x3x3": {
+        "mean": 1.9811206612649475,
+        "std": 0.5612726045403815,
+        "min": 0.0014662235043942928,
+        "max": 2.241174266557209
+      },
+      "grad_mag": {
+        "mean": 0.1138439556127908,
+        "std": 0.032283213483896636,
+        "max": 0.14131342639507524
+      },
+      "core_frac": {
+        "mean": 0.08669062092482656,
+        "std": 0.05763773046797334
+      },
+      "n_active_3x3x3": {
+        "mean": 25.2015306122449
+      },
+      "is_local_max": {
+        "count": 43,
+        "fraction": 0.1096938775510204
+      },
+      "complexity_distribution": {
+        "DSB": 267,
+        "DSB+": 93,
+        "DSB++": 32
+      },
+      "P_DSB": {
+        "21.000": {
+          "mean": 1.0,
+          "std": 0.0,
+          "cv": 0.0,
+          "min": 1.0,
+          "max": 1.0
+        },
+        "2.100": {
+          "mean": 0.8857743756470206,
+          "std": 0.0033255677005667936,
+          "cv": 0.37544184975294725,
+          "min": 0.8763447351712816,
+          "max": 0.8891707840831873
+        },
+        "0.210": {
+          "mean": 0.5300135258793528,
+          "std": 0.013683198029270595,
+          "cv": 2.58166959165214,
+          "min": 0.49121484559617407,
+          "max": 0.543988201304675
+        },
+        "0.021": {
+          "mean": 0.3577397894323598,
+          "std": 0.01869877992544547,
+          "cv": 5.226922047199609,
+          "min": 0.30471943684658687,
+          "max": 0.37683688791391684
+        },
+        "0.001": {
+          "mean": 0.3331348131672561,
+          "std": 0.019415129823324634,
+          "cv": 5.828009879464903,
+          "min": 0.2780832518977203,
+          "max": 0.35296352112288565
+        }
+      },
+      "energy_file_metadata": {
+        "filepath": "validation_data/proton_EnergyDeposit.csv",
+        "header_lines": [
+          "# TOPAS Version: 4.0",
+          "# Parameter File: proton.txt",
+          "# Results for scorer: EnergyDeposit",
+          "# Scored in component: ParallelWorldBox",
+          "# X in 60 bins of 3.09352e-05 cm",
+          "# Y in 60 bins of 3.09352e-05 cm",
+          "# Z in 60 bins of 3.09352e-05 cm",
+          "# EnergyDeposit ( MeV ) : Sum"
+        ],
+        "bin_size_cm": 3.09352e-05,
+        "n_bins": [
+          60,
+          60,
+          60
+        ],
+        "n_data_lines": 216000,
+        "n_nonzero_voxels": 3381,
+        "total_energy_MeV": 36.51317405261686,
+        "max_voxel_energy_MeV": 0.215500220656395,
+        "fraction_nonzero": 0.01565277777777778,
+        "parse_errors": 0
+      }
+    },
+    "carbon": {
+      "particle": "carbon",
+      "dataset_type": "validation",
+      "n_dsbs": 388,
+      "extraction_timestamp": "2026-02-17T20:13:25.190575",
+      "E_local": {
+        "mean": 0.11522173689625505,
+        "std": 0.04645020997700525,
+        "min": 0.0001753494143486023,
+        "max": 0.1706845164299011,
+        "median": 0.1289954483509064,
+        "q25": 0.1043465808033943,
+        "q75": 0.14321906492114064,
+        "cv": 40.31375609172489,
+        "n_zero": 0,
+        "n_nonzero": 388
+      },
+      "E_total_3x3x3": {
+        "mean": 1.3932121409885116,
+        "std": 0.4477791741425017,
+        "min": 0.001415521441231249,
+        "max": 1.6364900413079795
+      },
+      "grad_mag": {
+        "mean": 0.08011942241277904,
+        "std": 0.027279036829289293,
+        "max": 0.10176333768607274
+      },
+      "core_frac": {
+        "mean": 0.08902814994787898,
+        "std": 0.054130807818291715
+      },
+      "n_active_3x3x3": {
+        "mean": 24.603092783505154
+      },
+      "is_local_max": {
+        "count": 27,
+        "fraction": 0.06958762886597938
+      },
+      "complexity_distribution": {
+        "DSB": 270,
+        "DSB+": 90,
+        "DSB++": 28
+      },
+      "P_DSB": {
+        "21.000": {
+          "mean": 1.0,
+          "std": 0.0,
+          "cv": 0.0,
+          "min": 1.0,
+          "max": 1.0
+        },
+        "2.100": {
+          "mean": 0.910502753426644,
+          "std": 0.013002882613647591,
+          "cv": 1.4280992083452484,
+          "min": 0.8782669602570354,
+          "max": 0.9259772510010043
+        },
+        "0.210": {
+          "mean": 0.6427055282038929,
+          "std": 0.05191062578067185,
+          "cv": 8.076891127067393,
+          "min": 0.5140125109944369,
+          "max": 0.7044834336572118
+        },
+        "0.021": {
+          "mean": 0.5234625669637241,
+          "std": 0.06923520599821835,
+          "cv": 13.226391029220691,
+          "min": 0.3518197207635058,
+          "max": 0.6058581448608324
+        },
+        "0.001": {
+          "mean": 0.5074422711068244,
+          "std": 0.07156276393367317,
+          "cv": 14.102641425118506,
+          "min": 0.33002911393580253,
+          "max": 0.5926078339908445
+        }
+      },
+      "energy_file_metadata": {
+        "filepath": "validation_data/carbon_EnergyDeposit.csv",
+        "header_lines": [
+          "# TOPAS Version: 4.0",
+          "# Parameter File: carbonion.txt",
+          "# Results for scorer: EnergyDeposit",
+          "# Scored in component: ParallelWorldBox",
+          "# X in 60 bins of 3.09352e-05 cm",
+          "# Y in 60 bins of 3.09352e-05 cm",
+          "# Z in 60 bins of 3.09352e-05 cm",
+          "# EnergyDeposit ( MeV ) : Sum"
+        ],
+        "bin_size_cm": 3.09352e-05,
+        "n_bins": [
+          60,
+          60,
+          60
+        ],
+        "n_data_lines": 216000,
+        "n_nonzero_voxels": 7203,
+        "total_energy_MeV": 27.71802232728713,
+        "max_voxel_energy_MeV": 0.1706845164299011,
+        "fraction_nonzero": 0.03334722222222222,
+        "parse_errors": 0
+      }
+    }
+  },
+  "total_dsbs": 1169
+}

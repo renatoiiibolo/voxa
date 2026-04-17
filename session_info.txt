@@ -1,0 +1,40 @@
+Software environment used for this analysis
+===========================================
+
+R environment
+-------------
+R version 4.4.3
+Platform: macOS (Apple Silicon, arm64)
+
+R packages:
+  tidyverse   2.0.0  (ggplot2 3.5.2, dplyr 1.1.4, tidyr 1.3.1,
+                       readr 2.1.5, purrr 1.0.2, stringr 1.5.1,
+                       forcats 1.0.0, lubridate 1.9.4, tibble 3.2.1)
+  MASS        (bundled with R)
+  minpack.lm  (steps 1–3)
+  boot        (step 1)
+  jsonlite    (steps 9–12)
+  gridExtra   (steps 4, 10, 12)
+  grid        (steps 4, 5, 8, 10, 12)
+  car         (step 11, Levene's test)
+  cowplot     (step 8)
+  scales      (steps 4–6)
+  viridis     (step 5)
+
+
+Python environment
+------------------
+Python 3.14
+
+  numpy
+  pandas
+  scipy
+  matplotlib
+
+
+TOPAS-nBio simulations
+----------------------
+Track-structure simulations were run with TOPAS-nBio 4.0.
+Simulation inputs are not included in this repository; the extracted
+energy features are provided in voxa_features_output_calibration/
+and voxa_features_output_validation/.
