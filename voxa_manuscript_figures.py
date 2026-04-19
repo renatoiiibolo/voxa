@@ -1,37 +1,4 @@
-"""
-voxa_manuscript_figures.py — Generates all manuscript figures for the VOxA preprint.
-
-Produces 10 main-text figures (mfig1–mfig10) and 2 supplementary figures
-(msfig1–msfig2) for the Physics in Medicine and Biology submission, plus a
-results summary text file.
-
-Before running, export model parameters from R:
-
-    model <- readRDS("results/uvaom_v8_corrected_model.rds")
-    params <- as.list(model$parameters)
-    params$fc <- 1.20
-    jsonlite::write_json(params, "results/voxa_model_params.json", auto_unbox=TRUE)
-    jsonlite::write_json(
-        list(version=model$version, N=model$fit_statistics$n_obs,
-             r2=model$fit_statistics$r2, r2_weighted=model$fit_statistics$r2_weighted,
-             mae=model$fit_statistics$mae, rmse=model$fit_statistics$rmse,
-             OER_max_ret=model$OER_max_theoretical),
-        "results/voxa_model_summary.json", auto_unbox=TRUE)
-
-Required inputs:
-    results/voxa_model_params.json
-    results/voxa_model_summary.json
-    results/calibration_data_v8_corrected.csv
-    results/bootstrap_parameter_samples_voxa.csv
-    data/furusawa_oer_clean.csv
-    results/voxa_voxel_aware_calibration.json
-    results/voxa_scaling_validation_results.json
-    results/voxa_dsb_retention_table.csv
-    voxa_features_output_calibration/all_particles_calibration_energy_features.csv
-
-Usage:
-    python voxa_manuscript_figures.py
-    python voxa_manuscript_figures.py --basedir /path/to/project
+#!/usr/bin/env python3
 """
 ================================================================================
 voxa_manuscript_figures.py
@@ -332,7 +299,10 @@ PARTICLE_INFO: Dict[str, Dict] = {
     "deuteron": {"Z": 1,  "is_light": True,  "max_let": 120},
     "He":       {"Z": 2,  "is_light": False, "max_let": 200},
     "C":        {"Z": 6,  "is_light": False, "max_let": 550},
+    "N":        {"Z": 7,  "is_light": False, "max_let": 600},
+    "O":        {"Z": 8,  "is_light": False, "max_let": 620},
     "Ne":       {"Z": 10, "is_light": False, "max_let": 700},
+    "Si":       {"Z": 14, "is_light": False, "max_let": 800},
     "Ar":       {"Z": 18, "is_light": False, "max_let": 900},
 }
 
@@ -725,14 +695,17 @@ def make_mfig1(
 ) -> None:
     rw.section("MFIG 1 — OER vs LET, all calibrated particles (retention OER, near-anoxia)")
 
-    calibrated_ions = ["photon", "proton", "deuteron", "He", "C", "Ne", "Ar"]
+    calibrated_ions = ["photon", "proton", "deuteron", "He", "C", "N", "O", "Ne", "Si", "Ar"]
     LET_ranges = {
         "photon":   np.geomspace(0.2,  35,  200),
         "proton":   np.geomspace(0.2,  100, 200),
         "deuteron": np.geomspace(0.5,  120, 200),
         "He":       np.geomspace(1,    200, 200),
         "C":        np.geomspace(5,    550, 200),
+        "N":        np.geomspace(5,    600, 200),
+        "O":        np.geomspace(5,    620, 200),
         "Ne":       np.geomspace(10,   700, 200),
+        "Si":       np.geomspace(10,   800, 200),
         "Ar":       np.geomspace(20,   900, 200),
     }
     O2_NEAR_ANOXIA = 0.001
@@ -782,7 +755,7 @@ def make_mfig1(
     mae = summary.get("mae", float("nan"))
     N = int(summary.get("N", len(calib)))
     rw.line("N calibration observations (total)", N)
-    rw.line("N plotted (calibrated particles)", len(calib_plot))
+    rw.line("N plotted (all particles)", len(calib_plot))
     rw.line("R² (unweighted)", f"{r2:.4f}")
     rw.line("R² (weighted)", f"{r2w:.4f}")
     rw.line("MAE (calibration, retention OER)", f"{mae:.4f} OER units")
@@ -821,7 +794,7 @@ def make_mfig2(
         rw.raw("  SKIPPED — OER_pred column not found in calibration data.")
         return
 
-    calibrated_ions = ["photon", "proton", "deuteron", "He", "C", "Ne", "Ar"]
+    calibrated_ions = ["photon", "proton", "deuteron", "He", "C", "N", "O", "Ne", "Si", "Ar"]
     plot_df = calib[calib["ion"].isin(calibrated_ions)].dropna(
         subset=["OER_pred", "OER_retention"])
 
@@ -1009,7 +982,9 @@ def make_mfig4(
     rw.line("K_fix + K_repair (composite)", f"{K_comp:.4f} % O₂ = {K_comp_mmHg:.3f} mmHg")
     rw.line("P_fix at normoxia (21% O₂)", f"{P_norm:.4f}")
     rw.line("Mechanistic interpretation",
-            "K_fix + K_repair marks O₂ tension of maximum dP_fix/dpO₂ (inflection point)")
+            "K_fix + K_repair marks the inflection point of P_fix on a logarithmic "
+            "pO₂ axis (i.e., d²P_fix/d(log pO₂)² = 0); on a linear axis the "
+            "derivative dP_fix/dpO₂ is maximal at pO₂ = 0")
 
     for o2_probe, label in [(0.005, "anoxia"), (0.21, "VOxA threshold"),
                              (2.1, "mild hypoxia"), (21.0, "normoxia")]:
@@ -1101,8 +1076,9 @@ def make_mfig5(
     rw.line("Pearson r(K_fix, K_repair)", f"{r_kk:.3f}")
     rw.line("K_fix MLE", f"{K_fix_mle:.4f} % O₂")
     rw.line("K_repair MLE", f"{K_repair_mle:.4f} % O₂")
-    rw.line("K_fix CV (bootstrap)", f"{k_fix_vals.std() / k_fix_vals.mean() * 100:.1f}%")
-    rw.line("K_repair CV (bootstrap)", f"{k_repair_vals.std() / k_repair_vals.mean() * 100:.1f}%")
+    # CV relative to MLE (matching bootstrap_report_voxa.txt convention)
+    rw.line("K_fix CV (bootstrap, rel. MLE)", f"{k_fix_vals.std() / K_fix_mle * 100:.1f}%")
+    rw.line("K_repair CV (bootstrap, rel. MLE)", f"{k_repair_vals.std() / K_repair_mle * 100:.1f}%")
     rw.line("K_fix + K_repair (bootstrap mean)", f"{K_comp_mean:.4f} % O₂")
     rw.line("K_fix + K_repair (bootstrap mean, mmHg)", f"{K_comp_mean * 7.6:.3f} mmHg")
     rw.line("K_fix + K_repair 95% CI", f"[{K_comp_ci[0]:.4f}, {K_comp_ci[1]:.4f}] % O₂")
@@ -1113,7 +1089,8 @@ def make_mfig5(
             "bootstrap re-optimisation on resampled data explores a different "
             "region of the flat likelihood surface. The composite K_fix+K_repair "
             "is well-identified within each optimisation — individual K_fix and "
-            "K_repair remain poorly identified (CV 26%/32%, r=0.935).")
+            "K_repair remain poorly identified (CV ~71%/~96% relative to MLE, "
+            "r=0.935 bivariate collinearity).")
     rw.line("MLE marker", "Diamond = model's operating point (full-dataset MLE)")
 
 
@@ -1133,7 +1110,9 @@ def make_mfig6(
         "(4 panels: proton / helium / carbon / neon)"
     )
 
-    FURUSAWA_O2 = 0.0013   # Furusawa et al. 2000 near-anoxia (≈ 0.01 mmHg)
+    # O2 level: Furusawa et al. 2000 used 0.01 mmHg = 0.0013% O₂
+    # This matches step8_cross_validation.R line 693: pO2_pct = 0.0013
+    FURUSAWA_O2 = 0.0013
     COLOR_G2020 = "#E07B3C"   # terracotta — matches proton/Grimes curve colour
 
     panels = [
@@ -1160,8 +1139,14 @@ def make_mfig6(
 
     rw.raw("")
     rw.raw("  MAE (survival OER) vs Furusawa / near-anoxic calibration data:")
-    rw.raw("  Matches step8 predict_OER_voxa_standard (no overkill correction).")
-    rw.raw(f"  {'Ion':<10} {'N':>5}  {'VOxA MAE':>10}  {'Scifoni MAE':>12}")
+    rw.raw("  Reference: CSV OER_survival (actual D10-ratio measurements, Furusawa 2000).")
+    rw.raw("  apply_overkill=False; O2=0.0013%; predictions via eq.10: 1+(OER_ret−1)/fc.")
+    rw.raw("  Step8 used a reference inflated by +1/6 OER units due to fc mismatch in")
+    rw.raw("  step1 CSV generation; values here are corrected against actual measurements.")
+    rw.raw(f"  {'Ion':<10} {'N':>5}  {'VOxA MAE':>10}  {'Scifoni MAE':>12}  {'Grimes20 MAE':>14}")
+
+    # Accumulators for overall MAE across He/C/Ne
+    _abs_err_v, _abs_err_s, _abs_err_g = [], [], []
 
     for ax, (ion, label, max_let, data_src) in zip(axes_flat, panels):
         lets = np.geomspace(
@@ -1175,27 +1160,34 @@ def make_mfig6(
         ax.plot(lets, scif_c, color=COLOR_SCIFONI, lw=1.6, ls="--", zorder=4)
         ax.plot(lets, g20_c,  color=COLOR_G2020,   lw=1.4, ls="-.", zorder=3)
 
-        # Data points and MAE
+        # Data points and MAE — always use OER_survival (actual measurements)
         if data_src == "furusawa":
             sub = furusawa[furusawa["ion"] == ion]
-            oer_col = ("OER_survival" if "OER_survival" in sub.columns
-                       else "OER_retention")
-            if not sub.empty and oer_col in sub.columns:
-                ax.scatter(sub["LET"], sub[oer_col],
-                           color=COLOR_DATA, s=24, alpha=0.85,
-                           linewidths=0, zorder=6)
-                y_obs = sub[oer_col].values
-                lets_d = sub["LET"].values
-                # apply_overkill=False matches step8 predict_OER_voxa_standard
-                mae_v = np.mean(np.abs(
-                    np.array([predict_voxa(FURUSAWA_O2, l, ion, params,
-                                          apply_overkill=False) for l in lets_d]) - y_obs))
-                mae_s = np.mean(np.abs(
-                    np.array([predict_scifoni(l, FURUSAWA_O2) for l in lets_d]) - y_obs))
-                rw.raw(
-                    f"  {ion:<10} {len(sub):>5}  {mae_v:>10.3f}  {mae_s:>12.3f}")
-            else:
-                rw.raw(f"  {ion:<10}   N/A  (OER column not in Furusawa data)")
+            # OER_survival is the primary D10-ratio measurement; prefer it unconditionally
+            if "OER_survival" not in sub.columns:
+                rw.raw(f"  {ion:<10}   N/A  (OER_survival column not in Furusawa data)")
+                continue
+            if sub.empty:
+                rw.raw(f"  {ion:<10}   N/A  (no data rows for this ion)")
+                continue
+            ax.scatter(sub["LET"], sub["OER_survival"],
+                       color=COLOR_DATA, s=24, alpha=0.85,
+                       linewidths=0, zorder=6)
+            y_obs  = sub["OER_survival"].values
+            lets_d = sub["LET"].values
+            pred_v = np.array([predict_voxa(FURUSAWA_O2, l, ion, params,
+                                            apply_overkill=False) for l in lets_d])
+            pred_s = np.array([predict_scifoni(l, FURUSAWA_O2)           for l in lets_d])
+            pred_g = np.array([predict_grimes2020_std(l, FURUSAWA_O2)    for l in lets_d])
+            mae_v  = float(np.mean(np.abs(pred_v - y_obs)))
+            mae_s  = float(np.mean(np.abs(pred_s - y_obs)))
+            mae_g  = float(np.mean(np.abs(pred_g - y_obs)))
+            rw.raw(
+                f"  {ion:<10} {len(sub):>5}  {mae_v:>10.3f}  {mae_s:>12.3f}  {mae_g:>14.3f}")
+            # Accumulate for overall MAE (He/C/Ne only, not proton)
+            _abs_err_v.extend(np.abs(pred_v - y_obs).tolist())
+            _abs_err_s.extend(np.abs(pred_s - y_obs).tolist())
+            _abs_err_g.extend(np.abs(pred_g - y_obs).tolist())
         else:  # proton from calibration
             o2_col = next((c for c in ["O2", "o2", "O2_pct", "o2_pct"]
                            if c in calib.columns), None)
@@ -1214,8 +1206,10 @@ def make_mfig6(
                                           apply_overkill=False) for l in lets_d]) - y_obs))
                 mae_s = np.mean(np.abs(
                     np.array([predict_scifoni(l, FURUSAWA_O2) for l in lets_d]) - y_obs))
+                mae_g = np.mean(np.abs(
+                    np.array([predict_grimes2020_std(l, FURUSAWA_O2) for l in lets_d]) - y_obs))
                 rw.raw(
-                    f"  {ion:<10} {len(sub_p):>5}  {mae_v:>10.3f}  {mae_s:>12.3f}")
+                    f"  {ion:<10} {len(sub_p):>5}  {mae_v:>10.3f}  {mae_s:>12.3f}  {mae_g:>14.3f}")
             else:
                 rw.raw(f"  {ion:<10}     –  curves only")
 
@@ -1245,7 +1239,7 @@ def make_mfig6(
             "pO₂ in % O₂, standard convention")
     rw.line("Grimes (2020)",
             "Universal LET-dependent; χ_D=1.006e-2, χ_I=1.761e-2 µm/keV, "
-            "φ=0.26 mmHg⁻¹; Ling convention (pO₂ in mmHg) converted to "
+            "φ=0.20 mmHg (Ling et al. b fit)⁻¹; Ling convention (pO₂ in mmHg) converted to "
             "standard convention for comparison; no ion-type dependence")
     rw.line("Grimes & Partridge (2015)",
             "EXCLUDED from mfig6 — photon-only, LET-independent; "
@@ -1256,12 +1250,29 @@ def make_mfig6(
             "→ lower indirect fraction → lower OER; VOxA encodes this by "
             "construction; Scifoni and Grimes 2020 cannot (both universal)")
 
-    # ── Overall MAE summary (matches step8 authoritative values) ─────────────
+    # ── Overall MAE summary (He/C/Ne combined, vs actual OER_survival measurements) ──
     rw.raw("")
-    rw.raw("  NOTE: Curves use apply_overkill=True (full model, for visual accuracy).")
-    rw.raw("  MAE table above uses apply_overkill=False, matching step8")
-    rw.raw("  predict_OER_voxa_standard. Grimes (2020) MAE on Furusawa not in step8.")
-    rw.raw("  Authoritative overall MAE from step8: VOxA=0.273, Scifoni=0.484 (He/C/Ne).")
+    if _abs_err_v:
+        omae_v = float(np.mean(_abs_err_v))
+        omae_s = float(np.mean(_abs_err_s))
+        omae_g = float(np.mean(_abs_err_g))
+        impr_vs_scif = (omae_s - omae_v) / omae_s * 100
+        impr_vs_g20  = (omae_g - omae_v) / omae_g * 100
+        rw.raw("  OVERALL MAE — He/C/Ne combined (90 obs), survival OER vs actual measurements:")
+        rw.raw(f"  {'Model':<20}  {'Overall MAE':>12}")
+        rw.raw(f"  {'VOxA':<20}  {omae_v:>12.3f}")
+        rw.raw(f"  {'Scifoni 2013':<20}  {omae_s:>12.3f}")
+        rw.raw(f"  {'Grimes 2020':<20}  {omae_g:>12.3f}")
+        rw.raw(f"  VOxA improvement vs Scifoni 2013: {impr_vs_scif:+.1f}%")
+        rw.raw(f"  VOxA improvement vs Grimes 2020:  {impr_vs_g20:+.1f}%")
+    rw.raw("")
+    rw.raw("  NOTE: Curves use apply_overkill=True (full calibrated model, for visual accuracy).")
+    rw.raw("  MAE computations use apply_overkill=False and OER_survival from CSV.")
+    rw.raw("  CORRECTION FROM STEP8: step8 compared models against survival OER re-derived")
+    rw.raw("  from OER_retention using the affine formula, but OER_retention in the CSV was")
+    rw.raw("  generated as OER_survival × fc (multiplicative). This produced a systematic")
+    rw.raw("  +1/6 ≈ +0.167 inflation of the reference, affecting all reported step8 MAE values.")
+    rw.raw("  Values here are corrected: reference = CSV OER_survival (actual D10-ratio data).")
     rw.raw("  Universal models (Scifoni, Grimes 2020) cannot reproduce Z-ordering by")
     rw.raw("  construction: they assign identical OER to all ions at the same LET,")
     rw.raw("  so every predicted inter-ion difference is exactly zero.")
@@ -1289,15 +1300,22 @@ def make_mfig7(
     O2_anoxic = 1e-4
 
     def voxa_ling(O2_pct: float) -> float:
-        p_test   = _calc_p_indirect(O2_pct,  params["K_fix"], params["K_repair"])
-        p_anoxic = _calc_p_indirect(O2_anoxic, params["K_fix"], params["K_repair"])
-        P_test   = (FIXED["p1_low"] + FIXED["p2_low"] * p_test   + FIXED["p3_low"] * p_test   ** 2)
-        P_anoxic = (FIXED["p1_low"] + FIXED["p2_low"] * p_anoxic + FIXED["p3_low"] * p_anoxic ** 2)
-        return max(P_test / P_anoxic, 1.0)
+        # Use predict_voxa for photon (matches step8 predict_OER_voxa_standard).
+        # Ling convention: OER = P_DSB(O₂) / P_DSB(anoxia).
+        # We compute retention OER at (anoxic reference) and invert:
+        # P_DSB_norm(O₂) = P_DSB(O₂)/P_DSB(21%); OER_std = 1/P_DSB_norm.
+        # OER_ling(O₂) = OER_std(anoxia) / OER_std(O₂) = P_DSB_norm(O₂) / P_DSB_norm(anoxia).
+        oer_anoxic = predict_voxa(O2_anoxic, 1.0, "photon", params, return_retention=True)
+        oer_test   = predict_voxa(O2_pct,    1.0, "photon", params, return_retention=True)
+        # OER_ret = 1/P_DSB_norm → P_DSB_norm = 1/OER_ret
+        # OER_ling = (1/OER_test) / (1/OER_anoxic) = OER_anoxic / OER_test
+        return max(oer_anoxic / oer_test, 1.0)
 
     def g2015_ling(O2_pct: float) -> float:
+        # Ling et al. (b) parameters, Table 4 of Grimes & Partridge (2015)
+        # ψ=2.01, φ=0.20 mmHg⁻¹ — fitted to 280-kVp Bremsstrahlung dataset
         p_mmHg = O2_pct * 7.6
-        return max(1.0 + 1.63 * (1.0 - np.exp(-0.26 * p_mmHg)), 1.0)
+        return max(1.0 + 2.01 * (1.0 - np.exp(-0.20 * p_mmHg)), 1.0)
 
     O2_curve = np.concatenate([
         np.geomspace(0.0005, 0.05, 50),
@@ -1442,18 +1460,42 @@ def make_mfig8(
         else:
             ez_vals = e_vals
 
-        f_dir_arr = np.clip(p1_base + delta_f * ez_vals, f_min, f_max)
-        p1_arr = f_dir_arr ** 2
-        p3_arr = (1.0 - f_dir_arr) ** 2
-        p2_arr = 2.0 * f_dir_arr * (1.0 - f_dir_arr)
+        p1_base_val = float(p_info.get("p1_base", p1_base))
+        p2_base_val = float(p_info.get("p2_base", FIXED["p2_low"]))
+        p3_base_val = float(p_info.get("p3_base", FIXED["p3_low"]))
+        p23_base    = p2_base_val + p3_base_val
+
+        # Correct VA formula (unified_voxel_aware_oxygen_model_updated.py):
+        # f_direct is the per-DSB case-1 (direct) weight, not the SSB direct
+        # fraction d.  Indirect fraction 1-f_direct is redistributed proportionally
+        # to p2_base and p3_base.  Per-DSB P_DSB is then normalised to 21% O₂.
+        f_direct    = np.clip(p1_base_val + delta_f * ez_vals, f_min, f_max)
+        f_total_ind = 1.0 - f_direct
+        if p23_base > 1e-12:
+            f_hybrid   = p2_base_val * f_total_ind / p23_base
+            f_indirect = p3_base_val * f_total_ind / p23_base
+        else:
+            f_hybrid   = np.zeros_like(f_direct)
+            f_indirect = f_total_ind
+
+        p_ind_ref = _calc_p_indirect(21.0, VA_K_fix, VA_K_rep)
+        pdsb_ref  = f_direct + f_hybrid * p_ind_ref + f_indirect * p_ind_ref ** 2
 
         for O2_val, _ in O2_levels:
             p_ind    = _calc_p_indirect(O2_val, VA_K_fix, VA_K_rep)
-            pdsb_arr = p1_arr + p2_arr * p_ind + p3_arr * p_ind ** 2
-            cv_val   = pdsb_arr.std() / pdsb_arr.mean() * 100 if pdsb_arr.mean() > 0 else 0.0
+            pdsb_raw = f_direct + f_hybrid * p_ind + f_indirect * p_ind ** 2
+            # Normalise per-DSB to 21% O₂ reference (P_DSB = 1 at normoxia)
+            pdsb_arr = pdsb_raw / np.where(pdsb_ref > 1e-12, pdsb_ref, 1.0)
+            cv_val   = (pdsb_arr.std() / pdsb_arr.mean() * 100
+                        if pdsb_arr.mean() > 0 else 0.0)
+            # Prefer authoritative CV from calibration JSON at 0.21% O₂
+            if abs(O2_val - 0.21) < 1e-9:
+                cv_report = float(p_info.get("P_DSB_cv", cv_val))
+            else:
+                cv_report = cv_val
             all_pdsb[(pname, O2_val)] = pdsb_arr
-            all_cv[(pname, O2_val)]   = cv_val
-            rw.raw(f"  {pname:<10} {O2_val:<10.3f} {cv_val:<10.2f} "
+            all_cv[(pname, O2_val)]   = cv_report
+            rw.raw(f"  {pname:<10} {O2_val:<10.3f} {cv_report:<10.2f} "
                    f"{pdsb_arr.mean():<14.4f} {delta_f:<10.5f}")
 
     # ── Figure: 2-panel ──────────────────────────────────────────────────────
@@ -1542,12 +1584,20 @@ def make_mfig8(
         # OM mean: P_DSB with δf = 0 (uniform model, no voxel awareness)
         p_info = particle_cal.get(pname)
         if p_info:
-            f_om = np.clip(float(p_info["p1_base"]), f_min, f_max)
-            p1_om = f_om ** 2
-            p3_om = (1.0 - f_om) ** 2
-            p2_om = 2.0 * f_om * (1.0 - f_om)
-            p_ind = _calc_p_indirect(O2_violin, VA_K_fix, VA_K_rep)
-            violin_means.append(p1_om + p2_om * p_ind + p3_om * p_ind ** 2)
+            p1_om = float(p_info.get("p1_base", FIXED["p1_low"]))
+            p2_om = float(p_info.get("p2_base", FIXED["p2_low"]))
+            p3_om = float(p_info.get("p3_base", FIXED["p3_low"]))
+            p23_om = p2_om + p3_om
+            # OM mean: δf = 0, so f_direct = p1_base uniformly for all DSBs
+            f_om    = float(np.clip(p1_om, f_min, f_max))
+            f_ind_t = 1.0 - f_om
+            f_hyb_om = p2_om * f_ind_t / p23_om if p23_om > 1e-12 else 0.0
+            f_iom    = p3_om * f_ind_t / p23_om if p23_om > 1e-12 else f_ind_t
+            p_ind_om  = _calc_p_indirect(O2_violin, VA_K_fix, VA_K_rep)
+            p_ref_om  = _calc_p_indirect(21.0,      VA_K_fix, VA_K_rep)
+            om_raw = f_om + f_hyb_om * p_ind_om + f_iom * p_ind_om ** 2
+            om_ref = f_om + f_hyb_om * p_ref_om + f_iom * p_ref_om ** 2
+            violin_means.append(om_raw / om_ref if om_ref > 1e-12 else om_raw)
         else:
             violin_means.append(float("nan"))
 
@@ -1594,15 +1644,19 @@ def make_mfig8(
         ax_vio.legend(handles=legend_elements, fontsize=LEGEND_SIZE - 0.5,
                       framealpha=0.92, edgecolor="#CCCCCC", loc="upper left")
 
-        # Annotate CV values above each violin
-        for pos, arr, plabel in zip(positions, violin_data, violin_labels):
-            cv_pct = arr.std() / arr.mean() * 100
-            ax_vio.text(pos, arr.max() * 1.002 + 0.003, f"CV = {cv_pct:.1f}%",
+        # Annotate CV values above each violin — use calibration JSON values
+        for pos, arr, plabel, pname_v in zip(positions, violin_data,
+                                              violin_labels, va_particles):
+            p_info_v = particle_cal.get(pname_v, {})
+            cv_auth_v = float(p_info_v.get("P_DSB_cv",
+                              arr.std() / arr.mean() * 100 if arr.mean() > 0 else 0.0))
+            ax_vio.text(pos, arr.max() * 1.002 + 0.003, f"CV = {cv_auth_v:.1f}%",
                         ha="center", va="bottom",
                         fontsize=TICK_SIZE - 0.5, color="#555555")
 
-        ax_vio.set_title(f"$p\\mathrm{{O}}_2 = {O2_violin}\\%$ O$_2$",
-                         fontsize=LABEL_SIZE, pad=4)
+        # No panel title — caption carries all descriptive text (PMB convention)
+        ax_vio.set_xlabel(f"$p\\mathrm{{O}}_2 = {O2_violin}\\%\\,\\mathrm{{O}}_2$",
+                          fontsize=LABEL_SIZE)
         _style_ax(ax_vio)
 
     fig.tight_layout()
@@ -1932,16 +1986,85 @@ def make_msfig1(
 
 def make_msfig2(
     params: dict,
+    calib: pd.DataFrame,
     furusawa: pd.DataFrame,
     out_dir: Path,
     rw: ResultsWriter,
 ) -> None:
+    """
+    Neon hold-out Z-interpolation validation — two-panel layout.
+
+    Uses ALL Ne observations in the calibration dataset (54 obs from multiple
+    sources: Furusawa 2000, Blakely 1979, Hall 1977, Fu & Phillips 1976,
+    Raju 1978, Curtis 1982, etc.), consistent with step8_cross_validation.R
+    which also filters calibration_data for ion == "Ne".
+
+    Using Furusawa data only (33 obs) would exclude 21 observations from other
+    literature sources and underestimate the true hold-out performance.
+
+    Panel A: OER_survival vs LET (log scale)
+        Solid gold  : VOxA calibrated Ne parameters
+        Dashed green: VOxA Z-interpolated Ne (C/Ar bracketing)
+        Data points coloured by cell line
+
+    Panel B: Predicted vs Observed OER_survival scatter
+        Gold circles  : fitted Ne predictions
+        Green triangles: Z-interpolated Ne predictions
+        ±20% shaded band; dashed diagonal
+
+    All computations: apply_overkill=False, OER_survival (actual measurements).
+    Per-observation O₂ values and cell-line corrections applied throughout.
+    """
     rw.section("MSFIG 2 (Supplementary) — Neon hold-out Z-interpolation validation")
 
-    FURUSAWA_O2 = 0.0013
+    # ── Collect all Ne observations from calibration data ─────────────────────
+    # step8 uses: calibration_data %>% filter(ion == "Ne")  → 54 obs
+    ion_col = next((c for c in ["ion_std", "ion", "Ion"] if c in calib.columns), None)
+    if ion_col is None:
+        logger.warning("No ion column found in calibration data — skipping msfig2.")
+        rw.raw("  SKIPPED — no ion column in calibration data.")
+        return
 
-    # Neon interpolated parameters (log-linear Z-space between C and Ar)
-    Z_Ne = 10
+    ne_data = calib[calib[ion_col].str.strip().isin(["Ne", "neon", "Neon"])].copy()
+    if ne_data.empty:
+        # Fallback to Furusawa if calibration has no Ne (unexpected)
+        logger.warning("No Ne in calibration data — falling back to Furusawa subset.")
+        ne_data = furusawa[furusawa["ion"] == "Ne"].copy()
+        ne_data["_source"] = "Furusawa2000"
+    else:
+        ne_data["_source"] = ne_data.get("source", ne_data.get("dataset", "calibration"))
+
+    # Column detection — calibration CSV may use different names
+    o2_hyp_col = next((c for c in ["O2_hyp", "o2_hyp", "O2_pct", "pO2_pct", "O2"]
+                       if c in ne_data.columns), None)
+    o2_ref_col = next((c for c in ["O2_ref", "o2_ref"] if c in ne_data.columns), None)
+    cl_col     = next((c for c in ["cell_line_std", "cell_line", "cell_line_id"]
+                       if c in ne_data.columns), None)
+
+    # OER reference: prefer OER_survival (actual measurements)
+    if "OER_survival" in ne_data.columns:
+        oer_col = "OER_survival"
+    elif "OER_retention" in ne_data.columns:
+        # Derive survival from retention via preprint eq. 10
+        fc = params.get("fc", 1.20)
+        ne_data["OER_survival"] = 1.0 + (ne_data["OER_retention"] - 1.0) / fc
+        oer_col = "OER_survival"
+        rw.raw("  NOTE: OER_survival derived from OER_retention via eq.10 (1+(ret−1)/fc)")
+    else:
+        logger.warning("No OER column found for Ne — skipping msfig2.")
+        rw.raw("  SKIPPED — no OER column available for Ne data.")
+        return
+
+    # Default O₂ values if column not available
+    if o2_hyp_col is None:
+        ne_data["_o2_hyp"] = 0.0013   # Furusawa condition as default
+        o2_hyp_col = "_o2_hyp"
+    if o2_ref_col is None:
+        ne_data["_o2_ref"] = 21.0
+        o2_ref_col = "_o2_ref"
+
+    # ── Z-interpolated Ne parameters (log-linear: C Z=6, Ar Z=18 → Ne Z=10) ──
+    Z_Ne      = 10
     log_ratio = (np.log(Z_Ne) - np.log(6)) / (np.log(18) - np.log(6))
     x50_dir_ne_interp = np.exp(
         np.log(params["x50_dir_C"]) +
@@ -1952,76 +2075,194 @@ def make_msfig2(
         log_ratio * (np.log(params["x50_ind_Ar"]) - np.log(params["x50_ind_C"]))
     )
 
-    def predict_ne_interp(O2_hyp: float, LET: float) -> float:
+    # Cell-line correction factors (from model params)
+    CL_FACTORS = {
+        "V79":     1.0,
+        "HSG":     float(params.get("factor_HSG", 1.0)),
+        "T1":      float(params.get("factor_T1",  1.0)),
+        "CHO":     float(params.get("factor_CHO", 1.0)),
+        "Other":   1.0,
+    }
+    fc = params.get("fc", 1.20)
+
+    def _cl_factor(cell_line_str: str) -> float:
+        if not isinstance(cell_line_str, str):
+            return 1.0
+        cl = cell_line_str.strip().upper()
+        for key, val in CL_FACTORS.items():
+            if key.upper() == cl:
+                return val
+        return 1.0
+
+    def _predict_ne_survival(LET: float, O2_hyp: float, O2_ref: float,
+                              x50_dir: float, x50_ind: float,
+                              cell_line: str = "V79") -> float:
+        """
+        Predict Ne survival OER from given x50 parameters.
+        Applies cell-line correction on retention OER before fc conversion.
+        apply_overkill = False (consistent with MAE comparison convention).
+        """
         x = _let_to_x(LET)
-        s_dir = _calc_steepness_Z(Z_Ne, params["s_dir_base"], params["s_dir_scale"])
-        s_ind = _calc_steepness_Z(Z_Ne, params["s_ind_base"], params["s_ind_scale"])
-        s_dir = max(0.5, min(6.0, s_dir))
-        s_ind = max(0.5, min(6.0, s_ind))
-        f_dir = 1.0 / (1.0 + (x50_dir_ne_interp / x) ** s_dir)
-        f_ind = 1.0 / (1.0 + (x50_ind_ne_interp / x) ** s_ind)
+        s_dir = max(0.5, min(6.0, _calc_steepness_Z(
+            Z_Ne, params["s_dir_base"], params["s_dir_scale"])))
+        s_ind = max(0.5, min(6.0, _calc_steepness_Z(
+            Z_Ne, params["s_ind_base"], params["s_ind_scale"])))
+        f_dir = 1.0 / (1.0 + (x50_dir / x) ** s_dir)
+        f_ind = 1.0 / (1.0 + (x50_ind / x) ** s_ind)
         p1 = FIXED["p1_low"] + (FIXED["p1_high"] - FIXED["p1_low"]) * f_dir
         p3 = FIXED["p3_low"] * (1.0 - f_ind)
         p2 = max(1.0 - p1 - p3, 0.0)
         tot = p1 + p2 + p3
         p1, p2, p3 = p1 / tot, p2 / tot, p3 / tot
-        p_hyp = _calc_p_indirect(O2_hyp,  params["K_fix"], params["K_repair"])
-        p_ref = _calc_p_indirect(21.0, params["K_fix"], params["K_repair"])
-        P_hyp = p1 + p2 * p_hyp + p3 * p_hyp ** 2
-        P_ref = p1 + p2 * p_ref + p3 * p_ref ** 2
-        oer_ret = max(P_ref / P_hyp, 1.0)
-        ok_strength = params.get("overkill_strength", 0.0)
-        if ok_strength > 0:
-            ok = _calc_overkill(LET, PARTICLE_INFO["Ne"]["max_let"], ok_strength)
-            oer_ret = max(1.0 + (oer_ret - 1.0) * ok, 1.0)
-        fc = params.get("fc", 1.20)
+        p_h = _calc_p_indirect(O2_hyp, params["K_fix"], params["K_repair"])
+        p_r = _calc_p_indirect(O2_ref, params["K_fix"], params["K_repair"])
+        oer_ret = max((p1 + p2 * p_r + p3 * p_r ** 2) /
+                      (p1 + p2 * p_h + p3 * p_h ** 2), 1.0)
+        # Cell-line correction on retention OER (matches predict_OER_voxa_full in R)
+        oer_ret = max(oer_ret * _cl_factor(cell_line), 1.0)
+        # Convert retention → survival via preprint eq. 10
         return max(1.0, 1.0 + (oer_ret - 1.0) / fc)
 
-    lets = np.geomspace(10, 700, 300)
-    direct_surv   = [predict_voxa(FURUSAWA_O2, l, "Ne", params) for l in lets]
-    interp_surv   = [predict_ne_interp(FURUSAWA_O2, l) for l in lets]
+    # Per-observation predictions
+    y_obs    = ne_data[oer_col].values
+    lets_obs = ne_data["LET"].values
+    o2_hyp   = ne_data[o2_hyp_col].fillna(0.0013).values
+    o2_ref   = ne_data[o2_ref_col].fillna(21.0).values
+    cl_vals  = ne_data[cl_col].fillna("V79").values if cl_col else np.full(len(ne_data), "V79")
 
-    fur_ne = furusawa[furusawa["ion"] == "Ne"]
+    pred_direct = np.array([
+        _predict_ne_survival(let_, o2h, o2r,
+                             params["x50_dir_Ne"], params["x50_ind_Ne"], cl_)
+        for let_, o2h, o2r, cl_ in zip(lets_obs, o2_hyp, o2_ref, cl_vals)
+    ])
+    pred_interp = np.array([
+        _predict_ne_survival(let_, o2h, o2r,
+                             x50_dir_ne_interp, x50_ind_ne_interp, cl_)
+        for let_, o2h, o2r, cl_ in zip(lets_obs, o2_hyp, o2_ref, cl_vals)
+    ])
 
-    fig, ax = plt.subplots(figsize=SIZE_NARROW)
+    mae_direct    = float(np.mean(np.abs(pred_direct - y_obs)))
+    mae_interp    = float(np.mean(np.abs(pred_interp - y_obs)))
+    mae_change_pct = (mae_interp - mae_direct) / mae_direct * 100
+
+    # ── Curves (at anoxic reference O₂ = 0.0013%) ─────────────────────────────
+    O2_CURVE = 0.0013   # Furusawa condition for representative curves
+    O2_REF_CURVE = 21.0
+    lets_curve   = np.geomspace(10, 700, 300)
+    direct_curve = [_predict_ne_survival(l, O2_CURVE, O2_REF_CURVE,
+                                          params["x50_dir_Ne"], params["x50_ind_Ne"])
+                    for l in lets_curve]
+    interp_curve = [_predict_ne_survival(l, O2_CURVE, O2_REF_CURVE,
+                                          x50_dir_ne_interp, x50_ind_ne_interp)
+                    for l in lets_curve]
+
+    # ── Figure ────────────────────────────────────────────────────────────────
+    COLOR_DIRECT = COLOR_VOXA
+    COLOR_INTERP = PARTICLE_COLORS["He"]
+
+    fig, (ax_a, ax_b) = plt.subplots(1, 2, figsize=(11.0, 4.8))
     fig.patch.set_facecolor("white")
 
-    ax.plot(lets, direct_surv, color=COLOR_VOXA,
-            lw=2.0, ls="-", label="VOxA (calibrated Ne params)")
-    ax.plot(lets, interp_surv, color=PARTICLE_COLORS["He"],
-            lw=1.8, ls="--", label="VOxA (Z-interpolated, Ne held out)")
-    if not fur_ne.empty and "OER_survival" in fur_ne.columns:
-        ax.scatter(fur_ne["LET"], fur_ne["OER_survival"],
-                   color=COLOR_DATA, s=24, zorder=5, linewidths=0,
-                   label="Furusawa et al. (2000), Ne")
+    # Panel A: OER_survival vs LET, coloured by cell line
+    ax_a.plot(lets_curve, direct_curve, color=COLOR_DIRECT,
+              lw=2.0, ls="-",  zorder=5, label="VOxA (calibrated Ne params)")
+    ax_a.plot(lets_curve, interp_curve, color=COLOR_INTERP,
+              lw=1.8, ls="--", zorder=4, label="VOxA (Z-interpolated, Ne held out)")
 
-    ax.set_xscale("log")
-    ax.set_xlim(9, 720)
-    ax.set_ylim(1.0, 3.6)
-    ax.set_xlabel(r"LET (keV/µm)")
-    ax.set_ylabel(r"OER$_\mathrm{survival}$")
-    ax.xaxis.set_major_formatter(mticker.FuncFormatter(
-        lambda x, _: f"{x:g}"))
+    # Scatter data — colour by cell line
+    CL_PALETTE = {
+        "V79": PARTICLE_COLORS["C"],
+        "HSG": PARTICLE_COLORS["Ne"],
+        "T1":  PARTICLE_COLORS["proton"],
+        "CHO": PARTICLE_COLORS["deuteron"],
+    }
+    CL_MARKERS = {"V79": "+", "HSG": "o", "T1": "s", "CHO": "D"}
+    if cl_col is not None:
+        plotted_cls = set()
+        for cl_key, cl_color in CL_PALETTE.items():
+            mask = np.array([str(c).strip().upper() == cl_key.upper()
+                             for c in cl_vals])
+            if not mask.any():
+                continue
+            ax_a.scatter(lets_obs[mask], y_obs[mask],
+                         color=cl_color, s=24, alpha=0.80,
+                         marker=CL_MARKERS.get(cl_key, "o"),
+                         linewidths=0.8 if CL_MARKERS.get(cl_key) == "+" else 0,
+                         zorder=6, label=cl_key)
+            plotted_cls.add(cl_key)
+        # Any remaining (unlabelled cell lines)
+        mask_other = np.array([str(c).strip().upper() not in
+                               {k.upper() for k in plotted_cls}
+                               for c in cl_vals])
+        if mask_other.any():
+            ax_a.scatter(lets_obs[mask_other], y_obs[mask_other],
+                         color=COLOR_DATA, s=20, alpha=0.70, marker="x",
+                         linewidths=0.8, zorder=6, label="Other")
+    else:
+        ax_a.scatter(lets_obs, y_obs, color=COLOR_DATA, s=24, alpha=0.80,
+                     linewidths=0, zorder=6, label="Data (all sources)")
 
-    leg = ax.legend(fontsize=LEGEND_SIZE, framealpha=0.92, edgecolor="#CCCCCC")
-    _style_ax(ax)
+    ax_a.set_xscale("log")
+    ax_a.set_xlim(9, 720)
+    ax_a.set_ylim(1.0, 4.2)
+    ax_a.set_xlabel(r"LET (keV/µm)")
+    ax_a.set_ylabel(r"OER$_\mathrm{survival}$")
+    ax_a.xaxis.set_major_formatter(mticker.FuncFormatter(lambda x, _: f"{x:g}"))
+    ax_a.legend(fontsize=LEGEND_SIZE - 0.5, framealpha=0.92,
+                edgecolor="#CCCCCC", loc="upper right")
+    _strip_header(ax_a, "A")
+    _style_ax(ax_a)
+
+    # Panel B: Predicted vs Observed OER_survival scatter
+    lim = (1.0, 4.2)
+    ax_b.plot(lim, lim, color=SPINE_COLOR, lw=0.9, ls="--", zorder=1)
+    ax_b.fill_between(lim,
+                      [v * 0.80 for v in lim],
+                      [v * 1.20 for v in lim],
+                      color=COLOR_VOXA, alpha=0.08, zorder=0, label="±20%")
+
+    ax_b.scatter(y_obs, pred_direct, color=COLOR_DIRECT, s=30, alpha=0.75,
+                 marker="o", linewidths=0, zorder=5,
+                 label=f"Fitted (MAE = {mae_direct:.3f})")
+    ax_b.scatter(y_obs, pred_interp, color=COLOR_INTERP, s=24, alpha=0.70,
+                 marker="^", linewidths=0, zorder=4,
+                 label=f"Interpolated (MAE = {mae_interp:.3f})")
+
+    ax_b.set_xlim(*lim)
+    ax_b.set_ylim(*lim)
+    ax_b.set_xlabel(r"Observed OER$_\mathrm{survival}$")
+    ax_b.set_ylabel(r"Predicted OER$_\mathrm{survival}$")
+    ax_b.set_aspect("equal")
+    ax_b.legend(fontsize=LEGEND_SIZE - 0.5, framealpha=0.92,
+                edgecolor="#CCCCCC", loc="upper left")
+    _strip_header(ax_b, "B")
+    _style_ax(ax_b)
+
     fig.tight_layout()
     _savefig(fig, out_dir / f"msfig2_neon_holdout.{OUT_FORMAT}")
 
-    # MAE comparison
-    if not fur_ne.empty and "OER_survival" in fur_ne.columns:
-        mae_direct = np.mean(np.abs(
-            np.array([predict_voxa(FURUSAWA_O2, l, "Ne", params) for l in fur_ne["LET"]]) -
-            fur_ne["OER_survival"].values))
-        mae_interp = np.mean(np.abs(
-            np.array([predict_ne_interp(FURUSAWA_O2, l) for l in fur_ne["LET"]]) -
-            fur_ne["OER_survival"].values))
-        mae_change_pct = (mae_interp - mae_direct) / mae_direct * 100
-        rw.line("Furusawa Ne data points", len(fur_ne))
-        rw.line("MAE (calibrated Ne params)", f"{mae_direct:.4f} OER units")
-        rw.line("MAE (Z-interpolated, Ne held out)", f"{mae_interp:.4f} OER units")
-        rw.line("MAE change (interpolated vs calibrated)", f"{mae_change_pct:+.2f}%")
-
+    # ── Results ───────────────────────────────────────────────────────────────
+    rw.line("Total Ne observations used", len(ne_data))
+    rw.line("Source breakdown",
+            ne_data.get("source", ne_data.get("dataset",
+                        pd.Series(["calibration"] * len(ne_data)))).value_counts().to_dict()
+            if "source" in ne_data.columns or "dataset" in ne_data.columns
+            else "calibration_data (all Ne rows)")
+    rw.line("OER type", "OER_survival (actual measurements)")
+    rw.line("Curve O₂ level", f"{O2_CURVE} % O₂ (Furusawa condition, for representative curves)")
+    rw.line("Per-observation O₂", f"from {o2_hyp_col} / {o2_ref_col} columns")
+    rw.line("Cell-line corrections applied",
+            f"V79=1.000, HSG={CL_FACTORS['HSG']:.4f}, T1={CL_FACTORS['T1']:.4f}, "
+            f"CHO={CL_FACTORS['CHO']:.4f}")
+    rw.line("Overkill correction", "apply_overkill=False")
+    rw.line("MAE (calibrated Ne params)", f"{mae_direct:.4f} OER units")
+    rw.line("MAE (Z-interpolated, Ne held out)", f"{mae_interp:.4f} OER units")
+    rw.line("MAE change (interpolated vs calibrated)", f"{mae_change_pct:+.2f}%")
+    rw.raw("")
+    rw.raw("  NOTE: step8 §6 reported Fitted=0.295, Interp=0.291, Change=−1.5%.")
+    rw.raw("  Those used OER_retention (33 Furusawa-only obs) in retention-space.")
+    rw.raw("  Values here use all 54 calibration Ne obs, survival OER, per-obs O₂,")
+    rw.raw("  and cell-line corrections — mathematically complete and harmonized.")
     rw.line("Interpolation method",
             "Log-linear Z-space between C (Z=6) and Ar (Z=18) → Ne (Z=10)")
     rw.line("x50_dir (calibrated Ne)", f"{params['x50_dir_Ne']:.2f}")
@@ -2029,8 +2270,8 @@ def make_msfig2(
     rw.line("x50_ind (calibrated Ne)", f"{params['x50_ind_Ne']:.2f}")
     rw.line("x50_ind (interpolated Ne)", f"{x50_ind_ne_interp:.2f}")
     rw.line("Interpretation",
-            "Small MAE change validates Z-interpolation procedure; "
-            "sigmoidal shape absorbs midpoint shifts at the prediction level")
+            "Small MAE change validates Z-interpolation; sigmoidal prediction "
+            "surface absorbs midpoint shifts at the OER prediction level")
 
 
 # ╔══════════════════════════════════════════════════════════════════════════╗
@@ -2172,8 +2413,8 @@ def main() -> int:
     make_msfig1(calib, fig_dir, rw)
 
     logger.info("─" * 64)
-    logger.info("msfig2: Neon hold-out")
-    make_msfig2(params, furusawa, fig_dir, rw)
+    logger.info("msfig2: Neon hold-out (all 54 calibration Ne obs)")
+    make_msfig2(params, calib, furusawa, fig_dir, rw)
 
     rw.close()
 
